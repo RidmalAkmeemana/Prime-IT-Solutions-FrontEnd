@@ -44,7 +44,7 @@ export default function OurCompaniesPage() {
     <main className="min-h-screen pt-16">
       {/* Hero Section */}
       <section className="relative py-20 bg-secondary text-background overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/corporate-companies-business-network.jpg')] bg-cover bg-center opacity-10" />
+        <div className="absolute inset-0 bg-[url('/Team.jpg')] bg-cover bg-center opacity-10" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">Our Companies</h1>
