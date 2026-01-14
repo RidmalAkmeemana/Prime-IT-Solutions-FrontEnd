@@ -88,7 +88,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border text-center">
           <p className="text-sm text-black/60">
-            © {new Date().getFullYear()} Prime IT Solutions Private Limited. All rights reserved.
+            Copyright © {new Date().getFullYear()} Prime IT Solutions Private Limited | Powered by Orbis Solutions
           </p>
         </div>
       </div>
