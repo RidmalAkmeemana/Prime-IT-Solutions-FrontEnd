@@ -1,6 +1,40 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Network, Shield, Phone, Cpu, Zap, Lock, Code } from "lucide-react"
+import PageLoader from "@/components/PageLoader"
 
 export default function ServicesPage() {
+
+  const [loading, setLoading] = useState(true)
+  
+    useEffect(() => {
+        const startTime = performance.now()
+      
+        const handleLoad = () => {
+          const endTime = performance.now()
+          const loadTime = endTime - startTime
+      
+          setTimeout(() => {
+            setLoading(false)
+          }, loadTime)
+        }
+      
+        if (document.readyState === "complete") {
+          handleLoad()
+        } else {
+          window.addEventListener("load", handleLoad)
+        }
+      
+        return () => {
+          window.removeEventListener("load", handleLoad)
+        }
+      }, [])
+      
+      if (loading) {
+        return <PageLoader />
+      }
+
   const services = [
     {
       icon: Network,

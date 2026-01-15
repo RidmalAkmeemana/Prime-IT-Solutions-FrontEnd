@@ -1,8 +1,42 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Briefcase, Users, TrendingUp, Heart, MapPin, Clock } from "lucide-react"
+import PageLoader from "@/components/PageLoader"
 
 export default function CareersPage() {
+
+  const [loading, setLoading] = useState(true)
+        
+          useEffect(() => {
+              const startTime = performance.now()
+            
+              const handleLoad = () => {
+                const endTime = performance.now()
+                const loadTime = endTime - startTime
+            
+                setTimeout(() => {
+                  setLoading(false)
+                }, loadTime)
+              }
+            
+              if (document.readyState === "complete") {
+                handleLoad()
+              } else {
+                window.addEventListener("load", handleLoad)
+              }
+            
+              return () => {
+                window.removeEventListener("load", handleLoad)
+              }
+            }, [])
+            
+            if (loading) {
+              return <PageLoader />
+            }
+
   const benefits = [
     {
       icon: TrendingUp,

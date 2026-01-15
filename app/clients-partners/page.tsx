@@ -1,7 +1,41 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import PageLoader from "@/components/PageLoader"
 
 export default function ClientsPartnersPage() {
+
+  const [loading, setLoading] = useState(true)
+      
+        useEffect(() => {
+            const startTime = performance.now()
+          
+            const handleLoad = () => {
+              const endTime = performance.now()
+              const loadTime = endTime - startTime
+          
+              setTimeout(() => {
+                setLoading(false)
+              }, loadTime)
+            }
+          
+            if (document.readyState === "complete") {
+              handleLoad()
+            } else {
+              window.addEventListener("load", handleLoad)
+            }
+          
+            return () => {
+              window.removeEventListener("load", handleLoad)
+            }
+          }, [])
+          
+          if (loading) {
+            return <PageLoader />
+          }
+
   return (
     <main className="min-h-screen pt-16">
       {/* Hero Section */}

@@ -1,15 +1,18 @@
 "use client"
-
+import { useEffect, useState } from "react"
 import type React from "react"
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Mail, Phone, MapPin, Clock, ChevronDown } from "lucide-react"
+import PageLoader from "@/components/PageLoader"
 
 export default function ContactPage() {
+
+  const [loading, setLoading] = useState(true)
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,6 +24,34 @@ export default function ContactPage() {
   })
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  useEffect(() => {
+    const startTime = performance.now()
+  
+    const handleLoad = () => {
+      const endTime = performance.now()
+      const loadTime = endTime - startTime
+  
+      setTimeout(() => {
+        setLoading(false)
+      }, loadTime)
+    }
+  
+    if (document.readyState === "complete") {
+      handleLoad()
+    } else {
+      window.addEventListener("load", handleLoad)
+    }
+  
+    return () => {
+      window.removeEventListener("load", handleLoad)
+    }
+  }, [])
+  
+  if (loading) {
+    return <PageLoader />
+  }
+  
 
   const services = [
     { id: 1, label: "IT Infrastructure Solutions & Services" },

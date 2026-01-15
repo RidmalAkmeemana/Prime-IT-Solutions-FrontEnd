@@ -1,9 +1,42 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Shield, Network, Phone, Cpu, Zap, Lock, Code, Star } from "lucide-react"
+import PageLoader from "@/components/PageLoader"
 
 export default function HomePage() {
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+      const startTime = performance.now()
+    
+      const handleLoad = () => {
+        const endTime = performance.now()
+        const loadTime = endTime - startTime
+    
+        setTimeout(() => {
+          setLoading(false)
+        }, loadTime)
+      }
+    
+      if (document.readyState === "complete") {
+        handleLoad()
+      } else {
+        window.addEventListener("load", handleLoad)
+      }
+    
+      return () => {
+        window.removeEventListener("load", handleLoad)
+      }
+    }, [])
+    
+    if (loading) {
+      return <PageLoader />
+    }
+
   const businessUnits = [
     {
       icon: Network,
