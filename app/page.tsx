@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Shield, Network, Phone, Cpu, Zap, Lock, Code, Star } from "lucide-react"
 import PageLoader from "@/components/PageLoader"
+import Message from "@/components/message"
 
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Pagination, Autoplay } from "swiper/modules"
@@ -15,7 +16,22 @@ import "swiper/css"
 import "swiper/css/pagination"
 
 export default function HomePage() {
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [rating, setRating] = useState(0)
+  const [toast, setToast] = useState({
+    open: false,
+    status: "success" as "success" | "error",
+    title: "",
+    description: "",
+  });
+  const [formData, setFormData] = useState({
+    email: "",
+    name: "",
+    contact: "",
+    address: "",
+    message: "",
+  })
   const [testimonials, setTestimonials] = useState<any[]>([])
   const getInitials = (name: string) => {
     if (!name) return ""
@@ -23,6 +39,52 @@ export default function HomePage() {
     if (parts.length === 1) return parts[0][0].toUpperCase()
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
+
+  const handleInputChange = (e: any) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  /* =========================
+     FETCH CUSTOMER BY EMAIL
+  ========================= */
+  const fetchCustomerByEmail = async () => {
+    if (!formData.email) return;
+  
+    try {
+      const res = await fetch(
+        API_BASE_URL + "Prime-IT-Solutions-BackEnd/API/Public/getCustomerDetails.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ Customer_Email: formData.email }),
+        }
+      );
+  
+      const data = await res.json();
+  
+      if (data.success && data.data) {
+        setFormData((prev) => ({
+          ...prev,
+          name: data.data.Customer_Name || "",
+          contact: data.data.Customer_Contact || "",
+          address: data.data.Customer_Address || "",
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          name: "",
+          contact: "",
+          address: "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+    }
+  };
 
   useEffect(() => {
     const startTime = performance.now()
@@ -46,6 +108,73 @@ export default function HomePage() {
       window.removeEventListener("load", handleLoad)
     }
   }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    try {
+      const response = await fetch(
+        API_BASE_URL + "Prime-IT-Solutions-BackEnd/API/Public/saveReview.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            Customer_Name: formData.name,
+            Customer_Contact: formData.contact,
+            Customer_Email: formData.email,
+            Customer_Address: formData.address,
+            rating: String(rating), // use rating from state
+            Message: formData.message,
+          }),
+        }
+      );
+  
+      const data = await response.json();
+  
+      if (!data.success) {
+        setToast({
+          open: true,
+          status: "error",
+          title: "Failed to submit review",
+          description: data.message || "Please try again.",
+        });
+        return;
+      }
+  
+      // Success
+      setToast({
+        open: true,
+        status: "success",
+        title: "Review submitted successfully",
+        description: "Your review is pending approval.",
+      });
+  
+      // Reset form
+      setFormData({
+        email: "",
+        name: "",
+        contact: "",
+        address: "",
+        message: "",
+      });
+      setRating(0);
+  
+      // Close modal
+      setIsReviewOpen(false);
+  
+    } catch (error) {
+      console.error("Submit error:", error);
+      setToast({
+        open: true,
+        status: "error",
+        title: "Something went wrong",
+        description: "Please try again.",
+      });
+    }
+  };
+  
 
   useEffect(() => {
     fetch(
@@ -293,6 +422,16 @@ export default function HomePage() {
         <div className="container mx-auto px-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center">What Our Clients Say</h2>
 
+          {/* Write Review Button */}
+          <div className="flex justify-center mb-8">
+            <Button
+              onClick={() => setIsReviewOpen(true)}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Write a Review
+            </Button>
+          </div>
+
           <Swiper
             modules={[Autoplay, Pagination]}
             spaceBetween={30}
@@ -314,8 +453,8 @@ export default function HomePage() {
                         <Star
                           key={i}
                           className={`h-4 w-4 ${i < testimonial.stars
-                              ? "fill-primary text-primary"
-                              : "text-muted-foreground"
+                            ? "fill-primary text-primary"
+                            : "text-muted-foreground"
                             }`}
                         />
                       ))}
@@ -350,8 +489,6 @@ export default function HomePage() {
         </div>
       </section>
 
-
-
       {/* CTA Section */}
       <section className="py-20 bg-secondary text-background">
         <div className="container mx-auto px-4 text-center">
@@ -366,6 +503,125 @@ export default function HomePage() {
           </Button>
         </div>
       </section>
+
+      {/* Review Modal */}
+      {isReviewOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-8 relative">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-semibold">Write a Review</h3>
+              <button
+                onClick={() => setIsReviewOpen(false)}
+                className="text-gray-500 hover:text-black"
+              >
+                Close
+              </button>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+
+              <input
+                required
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleInputChange}
+                onBlur={fetchCustomerByEmail}
+                className="w-full border rounded-lg p-3"
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  required
+                  type="text"
+                  name="name"
+                  placeholder="Customer Name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="border rounded-lg p-3"
+                />
+                <input
+                  required
+                  type="text"
+                  name="contact"
+                  placeholder="Contact Number"
+                  value={formData.contact}
+                  onChange={handleInputChange}
+                  className="border rounded-lg p-3"
+                />
+              </div>
+
+              <input
+                required
+                type="text"
+                name="address"
+                placeholder="Customer Address"
+                value={formData.address.replace(/<[^>]*>/g, "")}
+                onChange={handleInputChange}
+                className="w-full border rounded-lg p-3"
+              />
+
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Add Star Rating
+                </label>
+                <div className="flex gap-3">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className={`h-7 w-7 cursor-pointer ${star <= rating
+                          ? "fill-primary text-primary"
+                          : "text-gray-300"
+                        }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <textarea
+                required
+                name="message"
+                placeholder="Message"
+                rows={4}
+                value={formData.message}
+                onChange={handleInputChange}
+                className="w-full border rounded-lg p-3"
+              />
+
+              <div className="flex justify-end gap-4 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsReviewOpen(false)}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="submit"
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Submit Review
+                </Button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/*Toast Message */}
+      {toast.open && (
+        <Message
+          status={toast.status}
+          title={toast.title}
+          description={toast.description}
+          onClose={() => setToast(prev => ({ ...prev, open: false }))}
+        />
+      )}
+
     </main>
   )
 }
