@@ -25,54 +25,54 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-      const startTime = performance.now()
-    
-      const handleLoad = () => {
-        const endTime = performance.now()
-        const loadTime = endTime - startTime
-    
-        setTimeout(() => {
-          setLoading(false)
-        }, loadTime)
-      }
-    
-      if (document.readyState === "complete") {
-        handleLoad()
-      } else {
-        window.addEventListener("load", handleLoad)
-      }
-    
-      return () => {
-        window.removeEventListener("load", handleLoad)
-      }
-    }, [])
+    const startTime = performance.now()
 
-    useEffect(() => {
-      fetch(
-        `${API_BASE_URL}Prime-IT-Solutions-BackEnd/API/Public/getRecentReviews.php`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          const formatted = data
-            .filter((r: any) => r.Is_Approved === "1")
-            .map((r: any) => ({
-              quote: r.Message,
-              author: r.Customer_Name,
-              company: r.Customer_Address, // change later if company added
-              logo: "/placeholder.svg",
-              stars: parseInt(r.Star_Rating),
-            }))
-  
-          setTestimonials(formatted)
-        })
-        .catch((err) => {
-          console.error("Failed to fetch testimonials:", err)
-        })
-    }, [])
-    
-    if (loading) {
-      return <PageLoader />
+    const handleLoad = () => {
+      const endTime = performance.now()
+      const loadTime = endTime - startTime
+
+      setTimeout(() => {
+        setLoading(false)
+      }, loadTime)
     }
+
+    if (document.readyState === "complete") {
+      handleLoad()
+    } else {
+      window.addEventListener("load", handleLoad)
+    }
+
+    return () => {
+      window.removeEventListener("load", handleLoad)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetch(
+      `${API_BASE_URL}Prime-IT-Solutions-BackEnd/API/Public/getRecentReviews.php`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        const formatted = data
+          .filter((r: any) => r.Is_Approved === "1")
+          .map((r: any) => ({
+            quote: r.Message,
+            author: r.Customer_Name,
+            company: r.Customer_Address, // change later if company added
+            logo: "/placeholder.svg",
+            stars: parseInt(r.Star_Rating),
+          }))
+
+        setTestimonials(formatted)
+      })
+      .catch((err) => {
+        console.error("Failed to fetch testimonials:", err)
+      })
+  }, [])
+
+  if (loading) {
+    return <PageLoader />
+  }
 
   const businessUnits = [
     {
@@ -205,151 +205,150 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-{/* Solution Partners Section */}
-<section className="py-20 bg-background">
-  <div className="container mx-auto px-4">
-    <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">Our Solution Partners</h2>
-    <p className="text-xl text-center text-muted-foreground mb-12">
-      Collaborating with industry leaders to deliver best-in-class solutions
-    </p>
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
-      {[
-        "logo1.png",
-        "logo2.png",
-        "logo3.png",
-        "logo4.png",
-        "logo5.png",
-        "logo6.png",
-        "logo7.png",
-        "logo8.png",
-        "logo9.png",
-        "logo10.png",
-        "logo11.png",
-        "logo12.png",
-        "logo13.png",
-        "logo14.png",
-        "logo15.png",
-        "logo16.png",
-        "logo17.png",
-        "logo18.png",
-      ].map((logo, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-center p-6 bg-muted rounded-lg hover:shadow-md transition-shadow"
-        >
-          <img
-            src={`/Partners/${logo}`}
-            alt={`Partner ${i + 1}`}
-            className="max-w-[120px] h-auto opacity-70 hover:opacity-100 transition-opacity"
-          />
+      {/* Solution Partners Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">Our Solution Partners</h2>
+          <p className="text-xl text-center text-muted-foreground mb-12">
+            Collaborating with industry leaders to deliver best-in-class solutions
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+            {[
+              "logo1.png",
+              "logo2.png",
+              "logo3.png",
+              "logo4.png",
+              "logo5.png",
+              "logo6.png",
+              "logo7.png",
+              "logo8.png",
+              "logo9.png",
+              "logo10.png",
+              "logo11.png",
+              "logo12.png",
+              "logo13.png",
+              "logo14.png",
+              "logo15.png",
+              "logo16.png",
+              "logo17.png",
+              "logo18.png",
+            ].map((logo, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-center p-6 bg-muted rounded-lg hover:shadow-md transition-shadow"
+              >
+                <img
+                  src={`/Partners/${logo}`}
+                  alt={`Partner ${i + 1}`}
+                  className="max-w-[120px] h-auto opacity-70 hover:opacity-100 transition-opacity"
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
 
-{/* Customers Section */}
-<section className="py-20 bg-muted">
-  <div className="container mx-auto px-4">
-    <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">Our Customers</h2>
-    <p className="text-xl text-center text-muted-foreground mb-12">
-      Trusted by leading organizations across industries
-    </p>
+      {/* Customers Section */}
+      <section className="py-20 bg-muted">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">Our Customers</h2>
+          <p className="text-xl text-center text-muted-foreground mb-12">
+            Trusted by leading organizations across industries
+          </p>
 
-    <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-6 gap-8">
-      {[
-        "customer1.png",
-        "customer2.png",
-        "customer3.png",
-        "customer4.png",
-        "customer5.png",
-        "customer6.png",
-        "customer7.png",
-        "customer8.png",
-        "customer9.png",
-        "customer10.png",
-        "customer11.png",
-        "customer12.png",
-      ].map((logo, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-center p-6 bg-background rounded-lg hover:shadow-md transition-shadow"
-        >
-          <img
-            src={`/Our Customers/${logo}`}
-            alt={`Customer ${i + 1}`}
-            className="max-w-[120px] h-auto opacity-70 hover:opacity-100 transition-opacity"
-          />
+          <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-6 gap-8">
+            {[
+              "customer1.png",
+              "customer2.png",
+              "customer3.png",
+              "customer4.png",
+              "customer5.png",
+              "customer6.png",
+              "customer7.png",
+              "customer8.png",
+              "customer9.png",
+              "customer10.png",
+              "customer11.png",
+              "customer12.png",
+            ].map((logo, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-center p-6 bg-background rounded-lg hover:shadow-md transition-shadow"
+              >
+                <img
+                  src={`/Our Customers/${logo}`}
+                  alt={`Customer ${i + 1}`}
+                  className="max-w-[120px] h-auto opacity-70 hover:opacity-100 transition-opacity"
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
 
       {/* Testimonials Section */}
-<section className="py-20 bg-background">
-  <div className="container mx-auto px-16">
-    <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center">What Our Clients Say</h2>
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center">What Our Clients Say</h2>
 
-    <Swiper
-      modules={[Autoplay, Pagination]}
-      spaceBetween={30}
-      slidesPerView={1}
-      loop={true}
-      autoplay={{ delay: 3000 }}
-      pagination={{
-        el: ".custom-pagination", // Attach to custom div
-        clickable: true,
-      }}
-    >
-      {testimonials.map((testimonial, index) => (
-        <SwiperSlide key={index}>
-          <Card className="hover:shadow-lg transition-shadow flex flex-col">
-            <CardContent className="p-8 flex flex-col flex-grow">
-              {/* Star Rating */}
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < testimonial.stars
-                        ? "fill-primary text-primary"
-                        : "text-muted-foreground"
-                    }`}
-                  />
-                ))}
-              </div>
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            spaceBetween={30}
+            slidesPerView={1}
+            loop={true}
+            autoplay={{ delay: 3000 }}
+            pagination={{
+              el: ".custom-pagination", // Attach to custom div
+              clickable: true,
+            }}
+          >
+            {testimonials.map((testimonial, index) => (
+              <SwiperSlide key={index}>
+                <Card className="hover:shadow-lg transition-shadow flex flex-col">
+                  <CardContent className="p-8 flex flex-col flex-grow">
+                    {/* Star Rating */}
+                    <div className="flex gap-1 mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${i < testimonial.stars
+                              ? "fill-primary text-primary"
+                              : "text-muted-foreground"
+                            }`}
+                        />
+                      ))}
+                    </div>
 
-              {/* Quote */}
-              <p className="text-lg mb-6 leading-relaxed italic flex-grow">"{testimonial.quote}"</p>
+                    {/* Quote */}
+                    <p className="text-lg mb-6 leading-relaxed italic flex-grow">"{testimonial.quote}"</p>
 
-              {/* Company Logo and Reviewer Info */}
-              <div className="border-t pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-gray-300 text-black flex items-center justify-center font-semibold text-sm">
-                    {getInitials(testimonial.author)}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{testimonial.author}</p>
-                    <p
-                      className="text-xs text-muted-foreground"
-                      dangerouslySetInnerHTML={{ __html: testimonial.company }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </SwiperSlide>
-      ))}
-    </Swiper>
+                    {/* Company Logo and Reviewer Info */}
+                    <div className="border-t pt-6">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-full bg-gray-300 text-black flex items-center justify-center font-semibold text-sm">
+                          {getInitials(testimonial.author)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{testimonial.author}</p>
+                          <p
+                            className="text-xs text-muted-foreground"
+                            dangerouslySetInnerHTML={{ __html: testimonial.company }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </SwiperSlide>
+            ))}
+          </Swiper>
 
-    {/* Pagination dots outside the Swiper */}
-    <div className="custom-pagination mt-8 flex justify-center"></div>
-  </div>
-</section>
+          {/* Pagination dots outside the Swiper */}
+          <div className="custom-pagination mt-8 flex justify-center"></div>
+        </div>
+      </section>
 
 
 
