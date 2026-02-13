@@ -1,5 +1,6 @@
 "use client"
 
+import { API_BASE_URL } from "@/lib/config";
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -7,8 +8,21 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Shield, Network, Phone, Cpu, Zap, Lock, Code, Star } from "lucide-react"
 import PageLoader from "@/components/PageLoader"
 
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Pagination, Autoplay } from "swiper/modules"
+
+import "swiper/css"
+import "swiper/css/pagination"
+
 export default function HomePage() {
   const [loading, setLoading] = useState(true)
+  const [testimonials, setTestimonials] = useState<any[]>([])
+  const getInitials = (name: string) => {
+    if (!name) return ""
+    const parts = name.trim().split(" ")
+    if (parts.length === 1) return parts[0][0].toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
 
   useEffect(() => {
       const startTime = performance.now()
@@ -31,6 +45,29 @@ export default function HomePage() {
       return () => {
         window.removeEventListener("load", handleLoad)
       }
+    }, [])
+
+    useEffect(() => {
+      fetch(
+        `${API_BASE_URL}Prime-IT-Solutions-BackEnd/API/Public/getRecentReviews.php`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          const formatted = data
+            .filter((r: any) => r.Is_Approved === "1")
+            .map((r: any) => ({
+              quote: r.Message,
+              author: r.Customer_Name,
+              company: r.Customer_Address, // change later if company added
+              logo: "/placeholder.svg",
+              stars: parseInt(r.Star_Rating),
+            }))
+  
+          setTestimonials(formatted)
+        })
+        .catch((err) => {
+          console.error("Failed to fetch testimonials:", err)
+        })
     }, [])
     
     if (loading) {
@@ -82,16 +119,6 @@ export default function HomePage() {
     },
   ]
 
-  const testimonials = [
-    {
-      quote: "Prime IT Solutions showed professionalism and outstanding developer efficiency. Any questions and problems, arising during the development cycle, were attended to by Prime specialists in a timely fashion leaving no unresolved issues.Prime team always remained responsive, demonstrated great communicative skills and ensured smooth interaction throughout all development and implementation stages, suggesting articulate and consistent decisions and viable solutions for our project.Prime ensured fast finalization of our project and fully met our expectations, concerning the time to bring the new features to our clients. We won't hesitate to turn to Prime services again and hope for further fruitful collaboration.",
-      author: "Ruwan Weerasuriya",
-      position: "Air Resources Management Center, Sri Lanka",
-      company: "Air Resources Management Center, Sri Lanka",
-      logo: "/Test2.jpg",
-    },
-    
-  ]
 
   return (
     <main className="min-h-screen">
@@ -262,43 +289,69 @@ export default function HomePage() {
 
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center">What Our Clients Say</h2>
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow flex flex-col">
-                <CardContent className="p-8 flex flex-col flex-grow">
-                  {/* Star Rating */}
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                    ))}
-                  </div>
+<section className="py-20 bg-background">
+  <div className="container mx-auto px-16">
+    <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center">What Our Clients Say</h2>
 
-                  {/* Quote */}
-                  <p className="text-lg mb-6 leading-relaxed italic flex-grow">"{testimonial.quote}"</p>
+    <Swiper
+      modules={[Autoplay, Pagination]}
+      spaceBetween={30}
+      slidesPerView={1}
+      loop={true}
+      autoplay={{ delay: 3000 }}
+      pagination={{
+        el: ".custom-pagination", // Attach to custom div
+        clickable: true,
+      }}
+    >
+      {testimonials.map((testimonial, index) => (
+        <SwiperSlide key={index}>
+          <Card className="hover:shadow-lg transition-shadow flex flex-col">
+            <CardContent className="p-8 flex flex-col flex-grow">
+              {/* Star Rating */}
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < testimonial.stars
+                        ? "fill-primary text-primary"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                ))}
+              </div>
 
-                  {/* Company Logo and Reviewer Info */}
-                  <div className="border-t pt-6">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={testimonial.logo || "/placeholder.svg"}
-                        alt={testimonial.company}
-                        className="h-12 w-auto opacity-80"
-                      />
-                      <div>
-                        <p className="font-semibold text-sm">{testimonial.author}</p>
-                        <p className="text-xs text-muted-foreground">{testimonial.position}</p>
-                      </div>
-                    </div>
+              {/* Quote */}
+              <p className="text-lg mb-6 leading-relaxed italic flex-grow">"{testimonial.quote}"</p>
+
+              {/* Company Logo and Reviewer Info */}
+              <div className="border-t pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-gray-300 text-black flex items-center justify-center font-semibold text-sm">
+                    {getInitials(testimonial.author)}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+                  <div>
+                    <p className="font-semibold text-sm">{testimonial.author}</p>
+                    <p
+                      className="text-xs text-muted-foreground"
+                      dangerouslySetInnerHTML={{ __html: testimonial.company }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </SwiperSlide>
+      ))}
+    </Swiper>
+
+    {/* Pagination dots outside the Swiper */}
+    <div className="custom-pagination mt-8 flex justify-center"></div>
+  </div>
+</section>
+
+
 
       {/* CTA Section */}
       <section className="py-20 bg-secondary text-background">
