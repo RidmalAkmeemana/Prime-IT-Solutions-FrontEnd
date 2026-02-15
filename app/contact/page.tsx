@@ -168,7 +168,7 @@ export default function ContactPage() {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                          placeholder="John Doe"
+                          placeholder="Enter Your Full Name"
                           required
                         />
                       </div>
@@ -180,7 +180,7 @@ export default function ContactPage() {
                           type="email"
                           value={formData.email}
                           onChange={handleChange}
-                          placeholder="john@example.com"
+                          placeholder="Enter Email"
                           required
                         />
                       </div>
@@ -195,7 +195,7 @@ export default function ContactPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder="+1 (555) 123-4567"
+                          placeholder="Enter Contact Number"
                         />
                       </div>
                       <div className="space-y-2">
@@ -220,7 +220,7 @@ export default function ContactPage() {
                           className="w-full border border-input rounded-md bg-background text-foreground flex items-center justify-between px-3 py-2.5 text-sm hover:bg-muted transition-colors"
                         >
                           <span className={formData.subject ? "text-foreground" : "text-muted-foreground"}>
-                            {formData.subject || "Select a service..."}
+                            {formData.subject || "Select a service"}
                           </span>
                           <ChevronDown
                             className={`h-4 w-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
