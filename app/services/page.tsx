@@ -51,7 +51,7 @@ export default function ServicesPage() {
   
     try {
       const res = await fetch(
-        API_BASE_URL + "Prime-IT-Solutions-BackEnd/API/Public/getCustomerDetails.php",
+        API_BASE_URL + "API/Public/getCustomerDetails.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -111,7 +111,7 @@ export default function ServicesPage() {
       
         try {
           const response = await fetch(
-            API_BASE_URL + "Prime-IT-Solutions-BackEnd/API/Public/saveReview.php",
+            API_BASE_URL + "API/Public/saveReview.php",
             {
               method: "POST",
               headers: {
@@ -168,7 +168,7 @@ export default function ServicesPage() {
       }      
 
       useEffect(() => {
-        fetch(`${API_BASE_URL}Prime-IT-Solutions-BackEnd/API/Public/getAllReviewData.php`)
+        fetch(`${API_BASE_URL}API/Public/getAllReviewData.php`)
           .then((res) => res.json())
           .then((data) => {
             const formatted = data
