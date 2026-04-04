@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Message from "@/components/message"
 import { API_BASE_URL } from "@/lib/config"
+import { X } from "lucide-react"
 
 export default function ServicesPage() {
 
@@ -316,7 +317,7 @@ export default function ServicesPage() {
           <div className="flex justify-center mb-10">
             <Button
               onClick={() => setIsReviewOpen(true)}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 cursor-pointer"
             >
               Write a Review
             </Button>
@@ -386,7 +387,7 @@ export default function ServicesPage() {
               <Button
                 onClick={handleLoadMore}
                 variant="outline"
-                className="px-8"
+                className="px-8 cursor-pointer"
               >
                 Load More Reviews
               </Button>
@@ -418,12 +419,7 @@ export default function ServicesPage() {
           <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-8 relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Write a Review</h3>
-              <button
-                onClick={() => setIsReviewOpen(false)}
-                className="text-gray-500 hover:text-black"
-              >
-                Close
-              </button>
+              <button onClick={() => setIsReviewOpen(false)} className="flex items-center gap-2 text-gray-500 hover:text-black cursor-pointer"><X className="h-5 w-5" /></button>
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
@@ -503,13 +499,14 @@ export default function ServicesPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setIsReviewOpen(false)}
+                  className="cursor-pointer"
                 >
                   Cancel
                 </Button>
 
                 <Button
                   type="submit"
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 cursor-pointer"
                 >
                   Submit Review
                 </Button>

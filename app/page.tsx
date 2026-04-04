@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Shield, Network, Phone, Cpu, Zap, Lock, Code, Star } from "lucide-react"
 import PageLoader from "@/components/PageLoader"
 import Message from "@/components/message"
+import { X } from "lucide-react"
 
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Pagination, Autoplay } from "swiper/modules"
@@ -426,11 +427,17 @@ export default function HomePage() {
           <div className="flex justify-center mb-8">
             <Button
               onClick={() => setIsReviewOpen(true)}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 cursor-pointer"
             >
               Write a Review
             </Button>
           </div>
+
+            {testimonials.length === 0 && (
+              <p className="text-center text-muted-foreground">
+                No reviews available yet.
+              </p>
+            )}
 
           <Swiper
             modules={[Autoplay, Pagination]}
@@ -510,12 +517,7 @@ export default function HomePage() {
           <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-8 relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold">Write a Review</h3>
-              <button
-                onClick={() => setIsReviewOpen(false)}
-                className="text-gray-500 hover:text-black"
-              >
-                Close
-              </button>
+              <button onClick={() => setIsReviewOpen(false)} className="flex items-center gap-2 text-gray-500 hover:text-black cursor-pointer"><X className="h-5 w-5" /></button>
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
@@ -595,13 +597,14 @@ export default function HomePage() {
                   type="button"
                   variant="outline"
                   onClick={() => setIsReviewOpen(false)}
+                  className="cursor-pointer"
                 >
                   Cancel
                 </Button>
 
                 <Button
                   type="submit"
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 cursor-pointer"
                 >
                   Submit Review
                 </Button>
