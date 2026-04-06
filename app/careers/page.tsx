@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import Message from "@/components/message"
 import { Briefcase, Users, TrendingUp, Heart, MapPin, Clock } from "lucide-react"
 import PageLoader from "@/components/PageLoader"
 import { API_BASE_URL } from "@/lib/config"
@@ -15,12 +16,27 @@ export default function CareersPage() {
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [fileName, setFileName] = useState("")
   const [isApplyOpen, setIsApplyOpen] = useState(false)
+  const [toast, setToast] = useState({
+    open: false,
+    status: "success" as "success" | "error",
+    title: "",
+    description: "",
+  })
   const [formData, setFormData] = useState({
     email: "",
     name: "",
     contact: "",
     address: "",
     cv: null as File | null
+  })
+
+  const [company, setCompany] = useState({
+    name: "",
+    address: "",
+    email: "",
+    tel1: "N/A",
+    tel2: "N/A",
+    tel3: "N/A",
   })
   const [visibleCount, setVisibleCount] = useState(3)
 
@@ -84,6 +100,72 @@ export default function CareersPage() {
     setVisibleCount(prev => prev + 3)
   }
 
+  /* =========================
+       FETCH COMPANY DETAILS
+    ========================= */
+    const fetchCompanyDetails = async () => {
+      try {
+          const res = await fetch(
+              API_BASE_URL + "API/Public/getCompanyDetails.php"
+          );
+          const data = await res.json();
+          if (data) {
+              setCompany({
+                  name: data.Company_Name || "",
+                  address: data.Company_Address || "",
+                  email: data.Company_Email || "",
+                  tel1: data.Company_Tel1?.trim() || "N/A",
+                  tel2: data.Company_Tel2?.trim() || "N/A",
+                  tel3: data.Company_Tel3?.trim() || "N/A",
+              });
+          }
+      } catch (error) {
+          console.error("Error fetching company details:", error);
+      }
+  };
+
+  useEffect(() => {
+      fetchCompanyDetails();
+  }, []);
+
+  /* =========================
+     FETCH APPLICANT BY EMAIL
+  ========================= */
+  const fetchApplicantByEmail = async () => {
+    if (!formData.email) return;
+  
+    try {
+      const res = await fetch(
+        API_BASE_URL + "API/Public/getApplicantDetails.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ Applicant_Email: formData.email }),
+        }
+      );
+  
+      const data = await res.json();
+  
+      if (data.success && data.data) {
+        setFormData((prev) => ({
+          ...prev,
+          name: data.data.Applicant_Name || "",
+          contact: data.data.Applicant_Contact || "",
+          address: data.data.Applicant_Address || "",
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          name: "",
+          contact: "",
+          address: "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+    }
+  };
+
   const handleFileChange = (e: any) => {
     const file = e.target.files[0]
 
@@ -102,24 +184,325 @@ export default function CareersPage() {
     }
   }
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault()
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
     if (!formData.cv) {
-      alert("Please upload CV")
-      return
+      setToast({
+        open: true,
+        status: "error",
+        title: "No CV selected",
+        description: "Please upload your CV before submitting.",
+      });
+      return;
     }
-
-    if (formData.cv.type !== "application/pdf") {
-      alert("Only PDF files allowed")
-      return
+  
+    if (!selectedJob?.id) {
+      setToast({
+        open: true,
+        status: "error",
+        title: "No Job Selected",
+        description: "Please select a job to apply for.",
+      });
+      return;
     }
+  
+    setLoading(true);
+  
+    try {
+      const form = new FormData();
+      form.append("Vacancy_Id", selectedJob.id);
+      form.append("Applicant_Name", formData.name);
+      form.append("Applicant_Email", formData.email);
+      form.append("Applicant_Contact", formData.contact);
+      form.append("Applicant_Address", formData.address);
+      form.append("Applicant_CV", formData.cv); // matches backend field name
+  
+      const response = await fetch(API_BASE_URL + "API/Public/applyJob.php", {
+        method: "POST",
+        body: form,
+      });
+  
+      const data = await response.json();
+  
+      if (!data.success) {
+        setToast({
+          open: true,
+          status: "error",
+          title: "Failed to submit CV",
+          description: data.message || "Please try again.",
+        });
+        return;
+      }
 
-    // TODO: API integration
-    setIsApplyOpen(false)
-  }
+      await sendApplicationEmails(data);
+  
+      setToast({
+        open: true,
+        status: "success",
+        title: "Application Submitted",
+        description: `Your application for "${selectedJob.title}" has been submitted.`,
+      });
+  
+      // Reset form
+      setFormData({
+        email: "",
+        name: "",
+        contact: "",
+        address: "",
+        cv: null,
+      });
+      setFileName("");
+      setIsApplyOpen(false);
+    } catch (error) {
+      console.error("Error submitting CV:", error);
+      setToast({
+        open: true,
+        status: "error",
+        title: "Something went wrong",
+        description: "Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const pdfPreview = formData.cv ? URL.createObjectURL(formData.cv) : null
+
+  const sendApplicationEmails = async (data: any) => {
+
+    let statusBadge = "";
+
+    if (data.Status === "Pending") {
+      statusBadge = `<span style="background:#ffc107;color:#000;padding:5px 10px;border-radius:4px;font-size:12px;">Pending</span>`;
+    }
+    else if (data.Status === "Hired") {
+      statusBadge = `<span style="background:#0d6efd;color:#fff;padding:5px 10px;border-radius:4px;font-size:12px;">Hired</span>`;
+    }
+    else if (data.Status === "Rejected") {
+      statusBadge = `<span style="background:#dc3545;color:#fff;padding:5px 10px;border-radius:4px;font-size:12px;">Rejected</span>`;
+    }
+    else if (data.Status === "Interview") {
+      statusBadge = `<span style="background:#0dcaf0;color:#000;padding:5px 10px;border-radius:4px;font-size:12px;">Interview</span>`;
+    }
+    else {
+      statusBadge = `<span style="background:#6c757d;color:#fff;padding:5px 10px;border-radius:4px;font-size:12px;">${data.Status}</span>`;
+    }
+  
+    /* =========================
+       APPLICANT EMAIL
+    ========================= */
+    const applicantBody = `
+        <div style="font-family: Arial, sans-serif; background-color:#f6f6f6; padding:30px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+              
+              <!-- HEADER -->
+              <tr>
+                  <td style="background:#b72227;padding:20px;text-align:center;color:#ffffff;">
+                      <h2 style="margin:0;">Application Submited</h2>
+                  </td>
+              </tr>
+
+              <tr>
+                  <td style="padding-top:20px;text-align:center;">
+                      <img src="https://res.cloudinary.com/dy5ciybdm/image/upload/v1775457537/logo_f8qm5r.png" alt="Logo">
+                  </td>
+              </tr>
+
+              <!-- BODY -->
+              <tr>
+                  <td style="padding:30px;">
+
+                      <p style="font-size:15px;color:#333;">
+                          Dear <b>${data.Applicant_Name}</b>,
+                      </p>
+
+                      <p style="font-size:14px;color:#555;"> 
+                          Your application has been <b>successfully submited</b>. Our team member will contact you shortly to discuss further details.
+                      </p>
+
+                      <!-- APPLICATION DETAILS -->
+                      <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-top:20px;">
+                          <tr style="background:#f2f2f2;">
+                              <td colspan="2" style="font-weight:bold;">Applicant Details</td>
+                          </tr>
+                          <tr>
+                              <td><b>Application No</b></td>
+                              <td>${data.Application_Id}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Process Status</b></td>
+                              <td>${statusBadge}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Job Title</b></td>
+                              <td>${data.Job_Title}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Job Location</b></td>
+                              <td>${data.Job_Location}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Job Type</b></td>
+                              <td>${data.Job_Type}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Applicant Name</b></td>
+                              <td>${data.Applicant_Name}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Applicant Address</b></td>
+                              <td>${data.Applicant_Address}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Applicant Contact</b></td>
+                              <td>${data.Applicant_Contact}</td>
+                          </tr>
+                          <tr>
+                              <td><b>Applicant Email</b></td>
+                              <td>${data.Applicant_Email}</td>
+                          </tr>
+                      </table>
+                  </td>
+              </tr>
+
+              <!-- FOOTER -->
+              <tr>
+                  <td style="background:#f9f9f9;padding:20px;text-align:center;font-size:12px;color:#777;">
+                      <b>${company.name}</b><br>
+                      ${company.address}<br>
+                      Email: ${company.email}<br>
+                      Contact: ${company.tel1}
+                  </td>
+              </tr>
+          </table>
+        </div>
+    `;
+  
+    /* =========================
+       HR EMAIL
+    ========================= */
+    const hrBody = `
+      <div style="font-family: Arial, sans-serif; background-color:#f6f6f6; padding:30px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+            
+            <!-- HEADER -->
+            <tr>
+                <td style="background:#b72227;padding:20px;text-align:center;color:#ffffff;">
+                    <h2 style="margin:0;">Application Submited</h2>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding-top:20px;text-align:center;">
+                    <img src="https://res.cloudinary.com/dy5ciybdm/image/upload/v1775457537/logo_f8qm5r.png" alt="Logo">
+                </td>
+            </tr>
+
+            <!-- BODY -->
+            <tr>
+                <td style="padding:30px;">
+
+                    <p style="font-size:14px;color:#555;"> 
+                        New application has been <b>successfully submited</b>. Please review the submitted application at your earliest convenience and proceed with the necessary next steps. 
+                    </p>
+
+                    <!-- APPLICATION DETAILS -->
+                    <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-top:20px;">
+                        <tr style="background:#f2f2f2;">
+                            <td colspan="2" style="font-weight:bold;">Applicant Details</td>
+                        </tr>
+                        <tr>
+                            <td><b>Application No</b></td>
+                            <td>${data.Application_Id}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Process Status</b></td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Job Title</b></td>
+                            <td>${data.Job_Title}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Job Location</b></td>
+                            <td>${data.Job_Location}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Job Type</b></td>
+                            <td>${data.Job_Type}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Name</b></td>
+                            <td>${data.Applicant_Name}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Address</b></td>
+                            <td>${data.Applicant_Address}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Contact</b></td>
+                            <td>${data.Applicant_Contact}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Email</b></td>
+                            <td>${data.Applicant_Email}</td>
+                        </tr>
+                    </table>
+
+                    <!-- DOWNLOAD BUTTON -->
+                    <div style="text-align:center; margin-top:20px;">
+                        <a href="${API_BASE_URL + data.Applicant_CV}" download
+                        style="padding:10px 20px; background:#b72227; color:#fff; text-decoration:none; border-radius:5px;"><i class="fe fe-download"></i>
+                            Download CV
+                        </a>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+                <td style="background:#f9f9f9;padding:20px;text-align:center;font-size:12px;color:#777;">
+                    <b>${company.name}</b><br>
+                    ${company.address}<br>
+                    Email: ${company.email}<br>
+                    Contact: ${company.tel1}
+                </td>
+            </tr>
+        </table>
+      </div>
+    `;
+  
+    /* =========================
+       SEND EMAILS
+    ========================= */
+  
+    // Applicant Email
+    await fetch(API_BASE_URL + "sendEmail.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        from: company.email,
+        name: company.name,
+        to: data.Applicant_Email,
+        subject: `New Application Submitted - ${data.Application_Id}`,
+        body: applicantBody,
+      }),
+    });
+  
+    // HR Email (send to company email)
+    await fetch(API_BASE_URL + "sendEmail.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        from: company.email,
+        name: company.name,
+        to: company.email, // HR email
+        subject: `New Application Submitted - ${data.Application_Id}`,
+        body: hrBody,
+      }),
+    });
+  };
 
   const benefits = [
     {
@@ -264,7 +647,7 @@ export default function CareersPage() {
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <input name="email" placeholder="Email" required
-                value={formData.email} onChange={handleInputChange}
+                value={formData.email} onChange={handleInputChange} onBlur={fetchApplicantByEmail}
                 className="w-full border p-3 rounded-lg" />
 
               <div className="grid grid-cols-2 gap-4">
@@ -339,7 +722,6 @@ export default function CareersPage() {
                     accept="application/pdf"
                     onChange={handleFileChange}
                     className="hidden"
-                    required
                   />
                 </div>
 
@@ -379,6 +761,18 @@ export default function CareersPage() {
           </Button>
         </div>
       </section>
+
+      {toast.open && (
+        <Message
+          status={toast.status}
+          title={toast.title}
+          description={toast.description}
+          onClose={() =>
+            setToast((prev) => ({ ...prev, open: false }))
+          }
+        />
+      )}
+
     </main>
   )
 }
