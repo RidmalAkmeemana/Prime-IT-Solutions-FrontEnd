@@ -30,6 +30,18 @@ export default function CareersPage() {
     cv: null as File | null
   })
 
+  // ==================== NEW: Individual Resume Submission ====================
+  const [isIndividualOpen, setIsIndividualOpen] = useState(false)
+  const [individualFileName, setIndividualFileName] = useState("")
+  const [individualFormData, setIndividualFormData] = useState({
+    email: "",
+    name: "",
+    contact: "",
+    address: "",
+    position: "",
+    cv: null as File | null
+  })
+
   const [company, setCompany] = useState({
     name: "",
     address: "",
@@ -504,6 +516,338 @@ export default function CareersPage() {
     });
   };
 
+  // ==================== NEW: Individual Resume Handlers ====================
+ 
+  const handleIndividualInputChange = (e: any) => {
+    const { name, value } = e.target
+    setIndividualFormData(prev => ({ ...prev, [name]: value }))
+  }
+ 
+  const fetchIndividualApplicantByEmail = async () => {
+    if (!individualFormData.email) return
+ 
+    try {
+      const res = await fetch(
+        API_BASE_URL + "API/Public/getApplicantDetails.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ Applicant_Email: individualFormData.email }),
+        }
+      )
+      const data = await res.json()
+ 
+      if (data.success && data.data) {
+        setIndividualFormData(prev => ({
+          ...prev,
+          name: data.data.Applicant_Name || "",
+          contact: data.data.Applicant_Contact || "",
+          address: data.data.Applicant_Address || "",
+        }))
+      } else {
+        setIndividualFormData(prev => ({
+          ...prev,
+          name: "",
+          contact: "",
+          address: "",
+        }))
+      }
+    } catch (error) {
+      console.error("Error fetching applicant details:", error)
+    }
+  }
+ 
+  const handleIndividualFileChange = (e: any) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.type !== "application/pdf") {
+        alert("Only PDF files allowed")
+        return
+      }
+      setIndividualFileName(file.name)
+      setIndividualFormData(prev => ({ ...prev, cv: file }))
+    }
+  }
+ 
+  const sendIndividualApplicationEmails = async (data: any) => {
+
+    let statusBadge = "";
+
+    if (data.Status === "Pending") {
+      statusBadge = `<span style="background:#ffc107;color:#000;padding:5px 10px;border-radius:4px;font-size:12px;">Pending</span>`;
+    }
+    else if (data.Status === "Hired") {
+      statusBadge = `<span style="background:#0d6efd;color:#fff;padding:5px 10px;border-radius:4px;font-size:12px;">Hired</span>`;
+    }
+    else if (data.Status === "Rejected") {
+      statusBadge = `<span style="background:#dc3545;color:#fff;padding:5px 10px;border-radius:4px;font-size:12px;">Rejected</span>`;
+    }
+    else if (data.Status === "Interview") {
+      statusBadge = `<span style="background:#0dcaf0;color:#000;padding:5px 10px;border-radius:4px;font-size:12px;">Interview</span>`;
+    }
+    else {
+      statusBadge = `<span style="background:#6c757d;color:#fff;padding:5px 10px;border-radius:4px;font-size:12px;">${data.Status}</span>`;
+    }
+
+    /* =========================
+       APPLICANT EMAIL
+    ========================= */
+    const applicantBody = `
+      <div style="font-family: Arial, sans-serif; background-color:#f6f6f6; padding:30px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+            <!-- HEADER -->
+            <tr>
+                <td style="background:#b72227;padding:20px;text-align:center;color:#ffffff;">
+                    <h2 style="margin:0;">Application Submited</h2>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top:20px;text-align:center;">
+                    <img src="https://res.cloudinary.com/dy5ciybdm/image/upload/v1775457537/logo_f8qm5r.png" alt="Logo">
+                </td>
+            </tr>
+            <!-- BODY -->
+            <tr>
+                <td style="padding:30px;">
+                    <p style="font-size:15px;color:#333;">
+                        Dear <b>${data.Applicant_Name}</b>,
+                    </p>
+
+                    <p style="font-size:14px;color:#555;"> 
+                        Your application has been <b>successfully submited</b>. Our team member will contact you shortly to discuss further details.
+                    </p>
+
+                    <!-- DETAILS -->
+                    <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-top:20px;">
+                        <tr style="background:#f2f2f2;">
+                            <td colspan="2" style="font-weight:bold;">Applicant Details</td>
+                        </tr>
+                        <tr>
+                            <td><b>Application No</b></td>
+                            <td>${data.Individuals_Id}</td>
+                        </tr>
+                        <tr>
+                              <td><b>Process Status</b></td>
+                              <td>${statusBadge}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Job Title</b></td>
+                            <td>${data.Job_Title}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Name</b></td>
+                            <td>${data.Applicant_Name}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Address</b></td>
+                            <td>${data.Applicant_Address}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Contact</b></td>
+                            <td>${data.Applicant_Contact}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Email</b></td>
+                            <td>${data.Applicant_Email}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <!-- FOOTER -->
+            <tr>
+                <td style="background:#f9f9f9;padding:20px;text-align:center;font-size:12px;color:#777;">
+                    <b>${company.name}</b><br>
+                    ${company.address}<br>
+                    Email: ${company.email}<br>
+                    Contact: ${company.tel1}
+                </td>
+            </tr>
+        </table>
+      </div>
+    `
+ 
+    /* =========================
+       HR EMAIL
+    ========================= */
+    const hrBody = `
+      <div style="font-family: Arial, sans-serif; background-color:#f6f6f6; padding:30px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+            <!-- HEADER -->
+            <tr>
+                <td style="background:#b72227;padding:20px;text-align:center;color:#ffffff;">
+                    <h2 style="margin:0;">Application Submited</h2>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-top:20px;text-align:center;">
+                    <img src="https://res.cloudinary.com/dy5ciybdm/image/upload/v1775457537/logo_f8qm5r.png" alt="Logo">
+                </td>
+            </tr>
+            <!-- BODY -->
+            <tr>
+                <td style="padding:30px;">
+                    <p style="font-size:14px;color:#555;"> 
+                        New application has been <b>successfully submited</b>. Please review the submitted application at your earliest convenience and proceed with the necessary next steps. 
+                    </p>
+                    <!-- DETAILS -->
+                    <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-top:20px;">
+                        <tr style="background:#f2f2f2;">
+                            <td colspan="2" style="font-weight:bold;">Applicant Details</td>
+                        </tr>
+                        <tr>
+                            <td><b>Application No</b></td>
+                            <td>${data.Individuals_Id}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Process Status</b></td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Job Title</b></td>
+                            <td>${data.Job_Title}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Name</b></td>
+                            <td>${data.Applicant_Name}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Address</b></td>
+                            <td>${data.Applicant_Address}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Contact</b></td>
+                            <td>${data.Applicant_Contact}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Email</b></td>
+                            <td>${data.Applicant_Email}</td>
+                        </tr>
+                    </table>
+                    <!-- DOWNLOAD BUTTON -->
+                    <div style="text-align:center; margin-top:20px;">
+                        <a href="${API_BASE_URL + data.Applicant_CV}" download
+                        style="padding:10px 20px; background:#b72227; color:#fff; text-decoration:none; border-radius:5px;">
+                            Download CV
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            <!-- FOOTER -->
+            <tr>
+                <td style="background:#f9f9f9;padding:20px;text-align:center;font-size:12px;color:#777;">
+                    <b>${company.name}</b><br>
+                    ${company.address}<br>
+                    Email: ${company.email}<br>
+                    Contact: ${company.tel1}
+                </td>
+            </tr>
+        </table>
+      </div>
+    `
+ 
+    // Applicant Email
+    await fetch(API_BASE_URL + "sendEmail.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        from: company.email,
+        name: company.name,
+        to: data.Applicant_Email,
+        subject: `New Application Submitted - ${data.Individuals_Id}`,
+        body: applicantBody,
+      }),
+    })
+ 
+    // HR Email
+    await fetch(API_BASE_URL + "sendEmail.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        from: company.email,
+        name: company.name,
+        to: company.email,
+        subject: `New Application Submitted - ${data.Individuals_Id}`,
+        body: hrBody,
+      }),
+    })
+  }
+ 
+  const handleIndividualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+ 
+    if (!individualFormData.cv) {
+      setToast({
+        open: true,
+        status: "error",
+        title: "No CV selected",
+        description: "Please upload your CV before submitting.",
+      })
+      return
+    }
+ 
+    setLoading(true)
+ 
+    try {
+      const form = new FormData()
+      form.append("Applicant_Name", individualFormData.name)
+      form.append("Applicant_Email", individualFormData.email)
+      form.append("Applicant_Contact", individualFormData.contact)
+      form.append("Applicant_Address", individualFormData.address)
+      form.append("Job_Title", individualFormData.position)
+      form.append("Applicant_CV", individualFormData.cv)
+ 
+      const response = await fetch(API_BASE_URL + "API/Public/applyIndividual.php", {
+        method: "POST",
+        body: form,
+      })
+ 
+      const data = await response.json()
+ 
+      if (!data.success) {
+        setToast({
+          open: true,
+          status: "error",
+          title: "Failed to submit resume",
+          description: data.message || "Please try again.",
+        })
+        return
+      }
+ 
+      await sendIndividualApplicationEmails(data)
+ 
+      setToast({
+        open: true,
+        status: "success",
+        title: "Resume Submitted",
+        description: "Your resume has been submitted successfully. We'll be in touch!",
+      })
+ 
+      // Reset form
+      setIndividualFormData({
+        email: "",
+        name: "",
+        contact: "",
+        address: "",
+        position: "",
+        cv: null,
+      })
+      setIndividualFileName("")
+      setIsIndividualOpen(false)
+    } catch (error) {
+      console.error("Error submitting resume:", error)
+      setToast({
+        open: true,
+        status: "error",
+        title: "Something went wrong",
+        description: "Please try again.",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+ 
+  const individualPdfPreview = individualFormData.cv ? URL.createObjectURL(individualFormData.cv) : null
+
   const benefits = [
     {
       icon: TrendingUp,
@@ -756,11 +1100,154 @@ export default function CareersPage() {
             We're always looking for talented individuals. Send us your resume and we'll keep you in mind for future
             opportunities.
           </p>
-          <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
-            <a href="/contact">Submit Your Resume</a>
+          <Button
+            size="lg"
+            className="bg-primary hover:bg-primary/90 cursor-pointer"
+            onClick={() => setIsIndividualOpen(true)}
+          >
+            Submit Your Resume
           </Button>
         </div>
       </section>
+
+      {/* INDIVIDUAL RESUME MODAL */}
+      {isIndividualOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-8 max-h-[90vh] overflow-y-auto">
+ 
+            <div className="flex justify-between mb-6">
+              <h4 className="text-lg font-semibold">Submit Your Resume</h4>
+              <button
+                onClick={() => setIsIndividualOpen(false)}
+                className="flex items-center gap-2 text-gray-500 hover:text-black cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+ 
+            <form className="space-y-4" onSubmit={handleIndividualSubmit}>
+              <input
+                name="email"
+                placeholder="Email"
+                required
+                value={individualFormData.email}
+                onChange={handleIndividualInputChange}
+                onBlur={fetchIndividualApplicantByEmail}
+                className="w-full border p-3 rounded-lg"
+              />
+ 
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  name="name"
+                  placeholder="Full Name"
+                  required
+                  value={individualFormData.name}
+                  onChange={handleIndividualInputChange}
+                  className="border p-3 rounded-lg"
+                />
+                <input
+                  name="contact"
+                  placeholder="Contact"
+                  required
+                  value={individualFormData.contact}
+                  onChange={handleIndividualInputChange}
+                  className="border p-3 rounded-lg"
+                />
+              </div>
+ 
+              <input
+                name="address"
+                placeholder="Address"
+                required
+                value={individualFormData.address}
+                onChange={handleIndividualInputChange}
+                className="w-full border p-3 rounded-lg"
+              />
+ 
+              <input
+                name="position"
+                placeholder="Applying Position (e.g. Software Engineer)"
+                required
+                value={individualFormData.position}
+                onChange={handleIndividualInputChange}
+                className="w-full border p-3 rounded-lg"
+              />
+ 
+              <div className="w-full">
+                <label className="block mb-2 text-sm font-medium text-muted-foreground">
+                  Upload CV
+                </label>
+ 
+                <div
+                  className="border-2 border-dashed border-red-400 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50 transition"
+                  onClick={() => document.getElementById("individualCvUpload")?.click()}
+                >
+                  {individualPdfPreview ? (
+                    <div className="flex items-center justify-center gap-3 py-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-10 w-10 text-red-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M7 7h10M7 11h6m-6 4h10M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                      </svg>
+                      <div className="text-left">
+                        <p className="text-sm font-medium text-gray-800 truncate max-w-[200px]">
+                          {individualFileName}
+                        </p>
+                        <p className="text-xs text-green-600">PDF Uploaded</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-2 text-gray-600 py-6">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-10 w-10 text-red-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0l-4 4m4-4l4 4m6 8v-6m0 0l4 4m-4-4l-4 4" />
+                      </svg>
+                      <p className="text-sm">
+                        Drag & Drop file here <br />
+                        or <span className="text-red-500 font-semibold">Click to Upload</span>
+                      </p>
+                    </div>
+                  )}
+ 
+                  <input
+                    id="individualCvUpload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleIndividualFileChange}
+                    className="hidden"
+                  />
+                </div>
+ 
+                <p className="text-xs text-gray-500 mt-2">File must be PDF</p>
+              </div>
+ 
+              <div className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsIndividualOpen(false)}
+                  className="cursor-pointer"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="cursor-pointer">
+                  Submit Resume
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {toast.open && (
         <Message
