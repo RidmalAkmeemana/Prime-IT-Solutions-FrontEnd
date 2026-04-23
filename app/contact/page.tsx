@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Mail, Phone, MapPin, Clock, ChevronDown } from "lucide-react"
+import { Mail, Phone, MapPin, Clock } from "lucide-react"
 import PageLoader from "@/components/PageLoader"
+import Message from "@/components/message"
+import { API_BASE_URL } from "@/lib/config"
 
 export default function ContactPage() {
 
@@ -17,13 +19,261 @@ export default function ContactPage() {
     name: "",
     email: "",
     phone: "",
-    company: "",
+    address: "",
     subject: "",
-    subjectId: "",
+    // subjectId: "",
     message: "",
   })
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [company, setCompany] = useState({
+    Company_Name: "",
+    Company_Email: "",
+    Company_Address: "",
+    Company_Tel1: "",
+    Company_Tel2: "",
+    Company_Tel3: "",
+  });
+
+  const [showMessage, setShowMessage] = useState(false);
+  const [messageStatus, setMessageStatus] = useState<"success" | "error">("success");
+
+  /* =========================
+     FETCH COMPANY DETAILS
+  ========================= */
+  useEffect(() => {
+    fetch(API_BASE_URL + "API/Public/getCompanyDetails.php")
+      .then((res) => res.json())
+      .then((data) => {
+        setCompany({
+          Company_Name: data.Company_Name || "",
+          Company_Email: data.Company_Email || "",
+          Company_Address: data.Company_Address || "",
+          Company_Tel1: data.Company_Tel1 || "",
+          Company_Tel2: data.Company_Tel2 || "",
+          Company_Tel3: data.Company_Tel3 || "",
+        });
+      })
+      .catch(console.error);
+  }, []);
+
+  /* =========================
+     HANDLE INPUT CHANGE
+  ========================= */
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  /* =========================
+     FETCH CUSTOMER BY EMAIL
+  ========================= */
+  const fetchCustomerByEmail = async () => {
+    if (!formData.email) return;
+
+    try {
+      const res = await fetch(
+        API_BASE_URL + "API/Public/getCustomerDetails.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ Customer_Email: formData.email }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success && data.data) {
+        setFormData((prev) => ({
+          ...prev,
+          name: data.data.Customer_Name || "",
+          phone: data.data.Customer_Contact || "",
+          address: data.data.Customer_Address || "",
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          name: "",
+          phone: "",
+          address: "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+    }
+  };
+
+  /* =========================
+     SUBMIT FORM
+  ========================= */
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch(
+        API_BASE_URL + "API/Public/saveDetails.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            Customer_Email: formData.email,
+            Customer_Name: formData.name,
+            Customer_Contact: formData.phone,
+            Customer_Address: formData.address,
+            Subject: formData.subject,
+            Message: formData.message,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setMessageStatus("success");
+        setShowMessage(true);
+        sendConfirmationEmail();
+        sendSubmitEmail();
+        setFormData({
+          email: "",
+          name: "",
+          phone: "",
+          address: "",
+          subject: "",
+          message: "",
+        });
+        setTimeout(() => setShowMessage(false), 5000);
+      } else {
+        setMessageStatus("error");
+        setShowMessage(true);
+        setTimeout(() => setShowMessage(false), 5000);
+        console.error(data.alert || "Failed to save data");
+      }
+    } catch (error) {
+      setMessageStatus("error");
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 5000);
+      console.error("Server error:", error);
+    }
+  };
+
+  /* =========================
+     EMAIL FUNCTIONS (UNCHANGED)
+  ========================= */
+  const sendConfirmationEmail = () => {
+    const emailBody = `
+    <div style="font-family: Arial, sans-serif; background-color:#f6f6f6; padding:30px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+            
+            <!-- HEADER -->
+            <tr>
+                <td style="background:#b72227;padding:20px;text-align:center;color:#ffffff;">
+                    <h2 style="margin:0;">Confirmation Email</h2>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding-top:20px;text-align:center;">
+                    <img src="https://res.cloudinary.com/dy5ciybdm/image/upload/v1775457537/logo_f8qm5r.png" alt="Logo">
+                </td>
+            </tr>
+
+            <!-- BODY -->
+            <tr>
+                <td style="padding:30px;">
+                    <p style="font-size:15px;color:#333;">
+                        Dear <b>${formData.name}</b>,
+                    </p>
+
+                    <p style="font-size:14px;color:#555;">
+                        Thank you for choosing <b>${company.Company_Name}</b>.  
+                        Your inquiry has been <b>successfully submited</b>. Our team member will contact you shortly to discuss further details.
+                    </p>
+
+                    <p style="font-size:15px;color:#333;">Thanks & Regards <br><b>${company.Company_Name}</b>,</p>
+                </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+                <td style="background:#f9f9f9;padding:20px;text-align:center;font-size:12px;color:#777;">
+                    <b>${company.Company_Name}</b><br>
+                    ${company.Company_Address}<br>
+                    Email: ${company.Company_Email}<br>
+                    Contact: ${company.Company_Tel1}
+                </td>
+            </tr>
+
+        </table>
+    </div>`;
+
+    sendEmail(company.Company_Email, company.Company_Name, formData.email, "Inquiry Submission", emailBody);
+  };
+
+  const sendSubmitEmail = () => {
+    const emailBody = `
+    <div style="font-family: Arial, sans-serif; background-color:#f6f6f6; padding:30px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto; background-color:#ffffff; border-radius:8px; overflow:hidden;">
+            
+            <!-- HEADER -->
+            <tr>
+                <td style="background:#b72227;padding:20px;text-align:center;color:#ffffff;">
+                    <h2 style="margin:0;">Inquiry</h2>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding-top:20px;text-align:center;">
+                    <img src="https://res.cloudinary.com/dy5ciybdm/image/upload/v1775457537/logo_f8qm5r.png" alt="Logo">
+                </td>
+            </tr>
+
+            <!-- BODY -->
+            <tr>
+                <td style="padding:30px;">
+                    <p style="font-size:15px;color:#333;">
+                        New inquiry from <b>${formData.name}</b>,
+                    </p>
+
+                    <p style="font-size:14px;color:#555;">
+                        ${formData.message}  
+                    </p>
+                    <p style="font-size:15px;color:#333;">Thanks & Regards 
+                        <br><b>${formData.name}</b>,
+                        <br><b>${formData.address}</b>,
+                        <br><b>${formData.email}</b>,
+                        <br><b>${formData.phone}</b>
+                    </p>
+                </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+                <td style="background:#f9f9f9;padding:20px;text-align:center;font-size:12px;color:#777;">
+                    <b>${company.Company_Name}</b><br>
+                    ${company.Company_Address}<br>
+                    Email: ${company.Company_Email}<br>
+                    Contact: ${company.Company_Tel1}
+                </td>
+            </tr>
+
+        </table>
+    </div>`;
+
+    receiverEmail(formData.email, formData.name, company.Company_Email, `New Inquiry | ${formData.subject}`, emailBody);
+  };
+
+  const sendEmail = async (from: string, name: string, to: string, subject: string, body: string) => {
+    await fetch(API_BASE_URL + "sendEmail.php", {
+      method: "POST",
+      body: new URLSearchParams({ from, name, to, subject, body }),
+    });
+  };
+
+  const receiverEmail = async (from: string, name: string, to: string, subject: string, body: string) => {
+    await fetch(API_BASE_URL + "sendEmail.php", {
+      method: "POST",
+      body: new URLSearchParams({ from, name, to, subject, body }),
+    });
+  };
 
   useEffect(() => {
     const startTime = performance.now()
@@ -50,48 +300,6 @@ export default function ContactPage() {
   
   if (loading) {
     return <PageLoader />
-  }
-  
-
-  const services = [
-    { id: 1, label: "IT Infrastructure Solutions & Services" },
-    { id: 2, label: "Cybersecurity Solutions & Services" },
-    { id: 3, label: "IP Telephony and Contact Center Solutions" },
-    { id: 4, label: "IoT Solutions & Services" },
-    { id: 5, label: "Electrical & Power Solutions" },
-    { id: 6, label: "Physical Security Solutions and Services" },
-    { id: 7, label: "Web Designing & Software Solutions" },
-  ]
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("[v0] Form submitted:", formData)
-    alert("Thank you for your message! We will get back to you soon.")
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      subject: "",
-      subjectId: "",
-      message: "",
-    })
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
-  }
-
-  const handleServiceSelect = (service: { id: number; label: string }) => {
-    setFormData({
-      ...formData,
-      subject: service.label,
-      subjectId: String(service.id),
-    })
-    setIsDropdownOpen(false)
   }
 
   return (
@@ -162,6 +370,19 @@ export default function ContactPage() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
+                        <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          onBlur={fetchCustomerByEmail}
+                          placeholder="Enter Email"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
                         <Input
                           id="name"
@@ -172,23 +393,11 @@ export default function ContactPage() {
                           required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="Enter Email"
-                          required
-                        />
-                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
+                        <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
                         <Input
                           id="phone"
                           name="phone"
@@ -196,52 +405,33 @@ export default function ContactPage() {
                           value={formData.phone}
                           onChange={handleChange}
                           placeholder="Enter Contact Number"
+                          required
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="company">Company Name</Label>
+                        <Label htmlFor="address">Address <span className="text-red-500">*</span></Label>
                         <Input
-                          id="company"
-                          name="company"
-                          value={formData.company}
+                          id="address"
+                          name="address"
+                          value={formData.address}
                           onChange={handleChange}
-                          placeholder="Your Company"
+                          placeholder="Enter Your Address"
+                          required
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="subject">Subject <span className="text-red-500">*</span></Label>
-                      <div className="relative">
-                        {/* Dropdown styled to match Input height */}
-                        <button
-                          type="button"
-                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                          className="w-full border border-input rounded-md bg-background text-foreground flex items-center justify-between px-3 py-2.5 text-sm hover:bg-muted transition-colors"
-                        >
-                          <span className={formData.subject ? "text-foreground" : "text-muted-foreground"}>
-                            {formData.subject || "Select a service"}
-                          </span>
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                          />
-                        </button>
-                        {isDropdownOpen && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-input rounded-md shadow-lg z-50">
-                            {services.map((service) => (
-                              <button
-                                key={service.id}
-                                type="button"
-                                onClick={() => handleServiceSelect(service)}
-                                className="w-full text-left px-3 py-2 hover:bg-muted transition-colors first:rounded-t-md last:rounded-b-md text-sm"
-                              >
-                                {service.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        <Label htmlFor="subject">Subject <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="subject"
+                          name="subject"
+                          value={formData.subject}
+                          onChange={handleChange}
+                          placeholder="Enter Subject"
+                          required
+                        />
                       </div>
-                    </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="message">Message <span className="text-red-500">*</span></Label>
@@ -251,7 +441,7 @@ export default function ContactPage() {
                         value={formData.message}
                         onChange={handleChange}
                         placeholder="Tell us more about your requirements..."
-                        rows={6}
+                        rows={8}
                         required
                       />
                     </div>
@@ -287,6 +477,16 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      {/* MESSAGE NOTIFICATION — Bottom Right */}
+      {showMessage && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Message
+            status={messageStatus}
+            onClose={() => setShowMessage(false)}
+          />
+        </div>
+      )}
     </main>
   )
 }
