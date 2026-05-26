@@ -14,7 +14,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <Image
-              src="/Logo.png"
+              src="https://res.cloudinary.com/dy5ciybdm/image/upload/v1779817348/footer-logo_mkahjx.png"
               alt="PELa IT Logo"
               width={150}
               height={60}
@@ -72,15 +72,15 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <Mail className="h-4 w-4 mt-0.5 text-primary" />
-                <span className="text-sm text-black/80">hello@prime.lk</span>
+                <span className="text-sm text-black/80">business@pitsl.com</span>
               </li>
               <li className="flex items-start gap-2">
                 <Phone className="h-4 w-4 mt-0.5 text-primary" />
-                <span className="text-sm text-black/80">+94 (11) 5 672 666 / +94 (11) 5 752 117</span>
+                <span className="text-sm text-black/80">+94 (78 )913 0036 | +94 (71) 405 9255</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 text-primary" />
-                <span className="text-sm text-black/80">No. 36, Nugegoda Road, Pepiliyana, Sri Lanka</span>
+                <span className="text-sm text-black/80">Colombo, Sri Lanka</span>
               </li>
             </ul>
           </div>
@@ -88,7 +88,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border text-center">
           <p className="text-sm text-black/60">
-            Copyright © {new Date().getFullYear()} Prime IT Solutions Private Limited | Powered by Orbis Solutions
+            Copyright © {new Date().getFullYear()} Prime IT Solitions & Consultancy Private Limited | Powered by Orbis Solutions
           </p>
         </div>
       </div>

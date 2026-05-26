@@ -9,12 +9,12 @@ import { Footer } from "@/components/footer"
 import { Suspense } from "react"
 
 export const metadata: Metadata = {
-  title: "Prime IT Solutions Private Limited - IT Solutions & Consulting",
+  title: "Prime IT Solitions & Consultancy Private Limited",
   description:
     "Leading IT solutions provider offering infrastructure, cybersecurity, IoT, telephony, and software development services.",
   generator: "Next.js",
   icons: {
-    icon: "/favicon.ico",
+    icon: "https://res.cloudinary.com/dy5ciybdm/image/upload/v1779817118/favicon_c1s9gq.ico",
   },
 }
 

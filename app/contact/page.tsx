@@ -329,17 +329,17 @@ export default function ContactPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {[
-                    { icon: Mail, title: "Email", content: "hello@prime.lk" },
-                    { icon: Phone, title: "Phone", content: "+94 (11) 5 672 666\n+94 (11) 5 752 117" },
+                    { icon: Mail, title: "Email", content: "business@pitsl.com" },
+                    { icon: Phone, title: "Phone", content: "+94 (78 )913 0036\n+94 (71) 405 9255" },
                     {
                       icon: MapPin,
                       title: "Address",
-                      content: "No. 36,\nNugegoda Road, Pepiliyana,\nSri Lanka",
+                      content: "Colombo, Sri Lanka",
                     },
                     {
                       icon: Clock,
                       title: "Business Hours",
-                      content: "Monday - Friday: 9:00 AM - 6:00 PM\nSaturday: 10:00 AM - 4:00 PM\nSunday: Closed",
+                      content: "24 Hours",
                     },
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-start gap-4">

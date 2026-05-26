@@ -254,7 +254,7 @@ export default function HomePage() {
     <main className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center bg-secondary text-background overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/Header.jpg')] bg-cover bg-center opacity-65" />
+        <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dy5ciybdm/image/upload/v1779820294/cover_n0te61.jpg')] bg-cover bg-center opacity-65" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-balance">Where Innovation Meets IT Excellence</h1>
@@ -497,10 +497,10 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-secondary text-background">
+      <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Transform Your Business?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto text-background/80">
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Let's discuss how our IT solutions can help you achieve your business goals
           </p>
           <Button size="lg" asChild className="bg-primary hover:bg-primary/90">

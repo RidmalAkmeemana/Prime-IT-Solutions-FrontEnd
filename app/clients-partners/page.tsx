@@ -207,10 +207,10 @@ export default function ClientsPartnersPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-secondary text-background">
+      <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">Become a Partner</h2>
-          <p className="text-xl text-background/80 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Interested in partnering with us? Let's explore how we can create value together.
           </p>
           <a
