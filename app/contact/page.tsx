@@ -464,7 +464,7 @@ export default function ContactPage() {
             <h2 className="text-4xl font-bold mb-8 text-center">Visit Our Office</h2>
             <div className="rounded-lg overflow-hidden shadow-lg h-[400px] md:h-[500px] bg-secondary/20">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.2763789000046!2d79.89100077507793!3d6.857440793141025!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae25bc0d2d89371%3A0x9e7e382aef447059!2sPrime%20Engineering%20Lanka%20(Pvt)%20Limited!5e0!3m2!1sen!2slk!4v1760906450090!5m2!1sen!2slk"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63371.80392292765!2d79.81491998080642!3d6.921922077524564!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae253d10f7a7003%3A0x320b2e4d32d3838d!2sColombo!5e0!3m2!1sen!2slk!4v1780333042906!5m2!1sen!2slk"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
